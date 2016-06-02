@@ -14,6 +14,8 @@ class CharacterCard extends FlxSpriteGroup
     var cardName:FlxText;
     var playerName:FlxText;
     public var type:Reg.Char;
+    public var isDisabled = false;
+    public var isDead = false;
 
     public function new(X:Float, Y:Float, type:Reg.Char)
     {
@@ -39,8 +41,14 @@ class CharacterCard extends FlxSpriteGroup
         FlxMouseEventManager.add(cardFrame, onMouseDown, onMouseUp, onMouseOver, onMouseOut);
     }
 
-    public function setName(name:String){
+    public function setName(name:String)
+    {
         playerName.text = name;
+    }
+
+    public function getFullName():String
+    {
+        return playerName.text + " (" + Reg.Names[type] + ")";
     }
 
     public function getName(){

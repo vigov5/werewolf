@@ -36,7 +36,7 @@ enum Turn {
 class Reg
 {
     public static var Characters:Array<Reg.Char>;
-    public static var Couple:Array<CharacterCard>;
+    public static var couple:Array<CharacterCard>;
     public static var Names = [
         Char.WOLF => "Wolf",
         Char.VILLAGER => "Villager",
@@ -78,11 +78,14 @@ class Reg
         Turn.TWILIGHT => "The Twilight"
     ];
 
-    public static var PlayerNames:Array<String>;
+    public static var playerNames:Array<String>;
     public static var disablerTarget:CharacterCard = null;
+    public static var apprenticeTarget:CharacterCard = null;
     public static var wolfTarget:CharacterCard = null;
     public static var portionLeft = 2;
     public static var portionUsed:Reg.Portion;
     public static var portionTarget:CharacterCard = null;
     public static var dumbWitchTarget:CharacterCard = null;
+    public static var characterMapping:Map<Reg.Char, CharacterCard>;
+    public static var wolfs:Array<CharacterCard>;
 }

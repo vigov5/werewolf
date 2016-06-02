@@ -24,7 +24,7 @@ class InputNameState extends FlxState
         trace(Reg.Characters);
         var row = 0;
         mapping = new Array();
-        Reg.PlayerNames = new Array();
+        Reg.playerNames = new Array();
         for(characterType in Reg.Characters)
         {
             var label = new PlayerLabel(140, 40 + 30*row, characterType);
@@ -54,7 +54,7 @@ class InputNameState extends FlxState
         }
         for (i in 0...mapping.length) {
             mapping[i].cleanUp();
-            Reg.PlayerNames.push(mapping[i].getText());
+            Reg.playerNames.push(mapping[i].getText());
         }
         FlxG.switchState(new PlayState());
     }

@@ -22,6 +22,7 @@ class PlayState extends FlxState
     var cursedUpgraded = false;
     var hunterIsDead = false;
     var hunterFuneralIsDone = false;
+    var hangingIsDone = false;
     var apprenticeUpgraded = false;
 
     override public function create():Void
@@ -213,7 +214,11 @@ class PlayState extends FlxState
             case Reg.Turn.MIDDAY:
                 checkGameOver();
                 summaryText.visible = false;
-                currentTurn = Reg.Turn.HANGING;
+                if (hangingIsDone) {
+                    currentTurn = Reg.Turn.TWILIGHT;
+                } else {
+                    currentTurn = Reg.Turn.HANGING;
+                }
             case Reg.Turn.HANGING:
                 if (getSelectedCardNums() != 1) {
                     errorText.text = "Invalid number of character !";
@@ -221,15 +226,21 @@ class PlayState extends FlxState
                 } else {
                     Reg.hangingTarget = getSelectedCard();
                     updateHangingState();
+                    hangingIsDone = true;
                     summaryText.visible = true;
                     currentTurn = Reg.Turn.TWILIGHT;
                 }
             case Reg.Turn.TWILIGHT:
                 checkGameOver();
-                cleanUpState();
-                summaryText.text = "";
-                nightCount += 1;
-                currentTurn = Reg.Turn.DISABLER;
+                if (hunterIsDead && !hunterFuneralIsDone) {
+                    summaryText.visible = false;
+                    currentTurn = Reg.Turn.FUNERAL;
+                } else {
+                    cleanUpState();
+                    summaryText.text = "";
+                    nightCount += 1;
+                    currentTurn = Reg.Turn.DISABLER;
+                }
             default:
         }
         clearSelectAllCards();
@@ -312,18 +323,25 @@ class PlayState extends FlxState
         super.update(elapsed);
     }
 
-    function checkGameOver(){
+    function checkGameOver()
+    {
+        if (countAliveWolfs() >= countAliveVillagers()) {
+            Reg.gameResult = Reg.Game.WOLFS_WON;
+            FlxG.switchState(new GameOverState());
+        } else if (countAliveWolfs() == 0) {
+            Reg.gameResult = Reg.Game.VILLAGERS_WON;
+            FlxG.switchState(new GameOverState());
+        }
+    }
+
+    function countAliveWolfs():Int
+    {
         var alive = 0;
         for (wolf in Reg.wolfs) {
             if (!wolf.isDead) alive += 1;
         }
-        if (alive >= countAlive()) {
-            Reg.gameResult = Reg.Game.WOLFS_WON;
-            FlxG.switchState(new GameOverState());
-        } else if (alive == 0) {
-            Reg.gameResult = Reg.Game.VILLAGERS_WON;
-            FlxG.switchState(new GameOverState());
-        }
+
+        return alive;
     }
 
     function setTestState()
@@ -425,6 +443,12 @@ class PlayState extends FlxState
                 upgradeCursed(character);
             } else {
                 summaryText.text += character.getFullName() + " is dead\n";
+                if (character.type == Reg.Char.HUNTER && !hunterIsDead) {
+                    hunterIsDead = true;
+                }
+                if (character.type == Reg.Char.WOLF) {
+                    Reg.wolfs.remove(character);
+                }
                 if (character == Reg.apprenticeTarget && !apprenticeUpgraded) {
                     summaryText.text += character.getFullName() + " is dead\n";
                     summaryText.text += Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + " became " + Reg.Names[character.type] + "\n";
@@ -457,7 +481,7 @@ class PlayState extends FlxState
             doneSelectCouple = true;
         }
 
-        if (Reg.wolfs.length == 1 && Reg.disablerTarget.type == Reg.Char.WOLF) {
+        if (countAliveWolfs() == 1 && Reg.disablerTarget.type == Reg.Char.WOLF) {
             summaryText.text += "One disabled wolf can't do anything !\n";
         } else {
             summaryText.text += "Wolfs choose to kill " + Reg.wolfTarget.getFullName() + " !\n";
@@ -603,7 +627,7 @@ class PlayState extends FlxState
         }
     }
 
-    function countAlive():Int
+    function countAliveVillagers():Int
     {
         var alive = 0;
         for (character in allCharacters) {

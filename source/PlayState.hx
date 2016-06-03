@@ -1,6 +1,5 @@
 package;
 
-import haxe.zip.Reader;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.text.FlxText;
@@ -16,11 +15,13 @@ class PlayState extends FlxState
     var summaryText:FlxText;
     var allCharacters:Array<CharacterCard>;
     var doneSelectCouple = false;
+    var doneSelectMaster = false;
     var toxicPortion:PortionCard;
     var protectionPortion:PortionCard;
     var nightCount = 1;
     var cursedUpgraded = false;
     var hunterIsDead = false;
+    var hunterFuneralIsDone = false;
     var apprenticeUpgraded = false;
 
     override public function create():Void
@@ -40,7 +41,7 @@ class PlayState extends FlxState
                 col = 0;
                 row += 1;
             }
-            card.setName(Reg.playerNames[index]);
+            card.setPlayerName(Reg.playerNames[index]);
             index += 1;
             add(card);
             allCharacters.push(card);
@@ -55,13 +56,13 @@ class PlayState extends FlxState
 
         var nextButton = new FlxButton(40, FlxG.height - 40, "Next", handleClick);
         add(nextButton);
-        currentTurnText = new FlxText(0, FlxG.height - 70, FlxG.width);
+        currentTurnText = new FlxText(0, FlxG.height - 80, FlxG.width);
         currentTurnText.setFormat(null, 14, 0x37322E, CENTER);
         add(currentTurnText);
         guideText = new FlxText(0, 10, FlxG.width);
         guideText.setFormat(null, 14, 0x000000, CENTER);
         add(guideText);
-        errorText = new FlxText(0, FlxG.height - 90, FlxG.width);
+        errorText = new FlxText(0, FlxG.height - 100, FlxG.width);
         errorText.setFormat(null, 14, 0xFF0000, CENTER);
         add(errorText);
         summaryText = new FlxText(0, 30, FlxG.width);
@@ -76,8 +77,8 @@ class PlayState extends FlxState
         protectionPortion.visible = false;
         add(protectionPortion);
 
-        // setTestState();
-        // currentTurn = Reg.Turn.HUNTER;
+        //setTestState();
+        //currentTurn = Reg.Turn.HUNTER;
 
         super.create();
     }
@@ -87,28 +88,38 @@ class PlayState extends FlxState
         errorText.text = "";
         switch (currentTurn)
         {
-            case Reg.Turn.DUMB_WITCH:
-                if (getSelectedCardNums() != 1) {
-                    errorText.text = "Invalid number of character !";
-                    Reg.dumbWitchTarget = null;
-                } else {
-                    Reg.dumbWitchTarget = getSelectedCard();
-                    summaryText.text += Reg.characterMapping[Reg.Char.DISABLER].getFullName() + " want " + Reg.dumbWitchTarget.getFullName() + " to be silenced\n";
-                    trace(Reg.dumbWitchTarget);
+            case Reg.Turn.NUMB_WITCH:
+                if (Reg.characterMapping[Reg.Char.NUMB_WITCH].isDead) {
                     currentTurn = Reg.Turn.DETECTIVE;
-                }
-            case Reg.Turn.SORCERER:
-                if (toxicPortion.isSelected() || protectionPortion.isSelected()) {
+                } else {
                     if (getSelectedCardNums() != 1) {
                         errorText.text = "Invalid number of character !";
-                        Reg.portionTarget = null;
+                        Reg.numbWitchTarget = null;
                     } else {
-                        Reg.portionTarget = getSelectedCard();
-                        Reg.portionUsed = toxicPortion.isSelected() ? Reg.Portion.TOXIC : Reg.Portion.PROTECTION;
-                        Reg.portionLeft -= 1;
-                        toxicPortion.visible = false;
-                        protectionPortion.visible = false;
-                        currentTurn = Reg.Turn.DUMB_WITCH;
+                        Reg.numbWitchTarget = getSelectedCard();
+                        summaryText.text += Reg.characterMapping[Reg.Char.NUMB_WITCH].getFullName() + " want " + Reg.numbWitchTarget.getFullName() + " to be silenced\n";
+                        trace(Reg.numbWitchTarget);
+                        currentTurn = Reg.Turn.DETECTIVE;
+                    }
+                }
+            case Reg.Turn.SORCERER:
+                if (Reg.portionLeft == 0 || Reg.characterMapping[Reg.Char.SORCERER].isDead) {
+                    currentTurn = Reg.Turn.NUMB_WITCH;
+                    toxicPortion.visible = false;
+                    protectionPortion.visible = false;
+                } else {
+                    if (toxicPortion.isSelected() || protectionPortion.isSelected()) {
+                        if (getSelectedCardNums() != 1) {
+                            errorText.text = "Invalid number of character !";
+                            Reg.portionTarget = null;
+                        } else {
+                            Reg.portionTarget = getSelectedCard();
+                            Reg.portionUsed = toxicPortion.isSelected() ? Reg.Portion.TOXIC : Reg.Portion.PROTECTION;
+                            Reg.portionLeft -= 1;
+                            toxicPortion.visible = false;
+                            protectionPortion.visible = false;
+                            currentTurn = Reg.Turn.NUMB_WITCH;
+                        }
                     }
                 }
             case Reg.Turn.WOLF:
@@ -123,54 +134,100 @@ class PlayState extends FlxState
                     currentTurn = Reg.Turn.SORCERER;
                 }
             case Reg.Turn.DISABLER:
-                if (getSelectedCardNums() != 1) {
-                    errorText.text = "Invalid number of character !";
-                    Reg.disablerTarget = null;
-                } else {
-                    Reg.disablerTarget = getSelectedCard();
-                    trace(Reg.disablerTarget);
-                    summaryText.text += Reg.characterMapping[Reg.Char.DISABLER].getFullName() + " want to sleep with " + Reg.disablerTarget.getFullName() + "\n";
+                if (Reg.characterMapping[Reg.Char.DISABLER].isDead) {
                     currentTurn = Reg.Turn.CURSED;
-                }
-            case Reg.Turn.CUPID:
-                if (!doneSelectCouple) {
-                    for (character in allCharacters) {
-                        if (character.isSelected()) {
-                            Reg.couple.push(character);
-                        }
+                } else {
+                    if (getSelectedCardNums() != 1) {
+                        errorText.text = "Invalid number of character !";
+                        Reg.disablerTarget = null;
+                    } else {
+                        Reg.disablerTarget = getSelectedCard();
+                        trace(Reg.disablerTarget);
+                        summaryText.text += Reg.characterMapping[Reg.Char.DISABLER].getFullName() + " want to sleep with " + Reg.disablerTarget.getFullName() + "\n";
+                        currentTurn = Reg.Turn.CURSED;
                     }
                 }
-                if (Reg.couple.length == 2) {
-                    summaryText.text += Reg.couple[0].getFullName() + " and " + Reg.couple[1].getFullName() + " is a couple\n";
-                    doneSelectCouple = true;
+            case Reg.Turn.CUPID:
+                if (Reg.characterMapping[Reg.Char.CUPID].isDead) {
                     currentTurn = Reg.Turn.WOLF;
                 } else {
-                    errorText.text = "Invalid number of character !";
-                    while (Reg.couple.length != 0) Reg.couple.pop();
+                    if (Reg.couple.length != 2) {
+                        for (character in allCharacters) {
+                            if (character.isSelected()) {
+                                Reg.couple.push(character);
+                            }
+                        }
+                    }
+                    if (Reg.couple.length == 2) {
+                        summaryText.text += Reg.couple[0].getFullName() + " and " + Reg.couple[1].getFullName() + " is a couple\n";
+                        currentTurn = Reg.Turn.WOLF;
+                    } else {
+                        errorText.text = "Invalid number of character !";
+                        while (Reg.couple.length != 0) Reg.couple.pop();
+                    }
                 }
             case Reg.Turn.CURSED:
                 currentTurn = Reg.Turn.CUPID;
             case Reg.Turn.APPRENTICE:
-                if (getSelectedCardNums() != 1) {
-                    errorText.text = "Invalid number of character !";
-                    Reg.apprenticeTarget = null;
-                } else {
-                    Reg.apprenticeTarget = getSelectedCard();
-                    summaryText.text += Reg.apprenticeTarget.getFullName() + " is master of " + Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + "\n";
-                    trace(Reg.apprenticeTarget);
+                if (doneSelectMaster) {
                     currentTurn = Reg.Turn.HUNTER;
+                } else {
+                    if (getSelectedCardNums() != 1) {
+                        errorText.text = "Invalid number of character !";
+                        Reg.apprenticeTarget = null;
+                    } else {
+                        Reg.apprenticeTarget = getSelectedCard();
+                        summaryText.text += Reg.apprenticeTarget.getFullName() + " is master of " + Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + "\n";
+                        trace(Reg.apprenticeTarget);
+                        doneSelectMaster = true;
+                        currentTurn = Reg.Turn.HUNTER;
+                    }
                 }
             case Reg.Turn.DETECTIVE:
                 currentTurn = Reg.Turn.APPRENTICE;
             case Reg.Turn.HUNTER:
-                updateGameState();
+                updateDawnState();
                 summaryText.visible = true;
                 currentTurn = Reg.Turn.DAWN;
             case Reg.Turn.DAWN:
+                summaryText.visible = false;
+                if (hunterIsDead && !hunterFuneralIsDone) {
+                    currentTurn = Reg.Turn.FUNERAL;
+                } else {
+                    currentTurn = Reg.Turn.HANGING;
+                }
+            case Reg.Turn.FUNERAL:
+                checkGameOver();
+                if (getSelectedCardNums() != 1) {
+                    errorText.text = "Invalid number of character !";
+                    Reg.hunterTarget = null;
+                } else {
+                    Reg.hunterTarget = getSelectedCard();
+                    trace(Reg.hunterTarget);
+                    summaryText.text += Reg.characterMapping[Reg.Char.HUNTER].getFullName() + " want " + Reg.hunterTarget.getFullName() + " to follow him\n";
+                    updateFuneralState();
+                    summaryText.visible = true;
+                    hunterFuneralIsDone = true;
+                    currentTurn = Reg.Turn.MIDDAY;
+                }
+            case Reg.Turn.MIDDAY:
+                checkGameOver();
+                summaryText.visible = false;
                 currentTurn = Reg.Turn.HANGING;
             case Reg.Turn.HANGING:
-                currentTurn = Reg.Turn.TWILIGHT;
+                if (getSelectedCardNums() != 1) {
+                    errorText.text = "Invalid number of character !";
+                    Reg.hangingTarget = null;
+                } else {
+                    Reg.hangingTarget = getSelectedCard();
+                    updateHangingState();
+                    summaryText.visible = true;
+                    currentTurn = Reg.Turn.TWILIGHT;
+                }
             case Reg.Turn.TWILIGHT:
+                checkGameOver();
+                cleanUpState();
+                summaryText.text = "";
                 nightCount += 1;
                 currentTurn = Reg.Turn.DISABLER;
             default:
@@ -184,34 +241,70 @@ class PlayState extends FlxState
         switch (currentTurn)
         {
             case Reg.Turn.DETECTIVE:
-                guideText.text = "Pick 3 character to guess";
-            case Reg.Turn.DUMB_WITCH:
-                guideText.text = "Pick a target to dumb";
-            case Reg.Turn.SORCERER:
-                guideText.text = "Optional: pick a portion, then pick a target";
-                if (toxicPortion.isSelected()) {
-                    protectionPortion.clearSelect();
+                if (Reg.disablerTarget == Reg.characterMapping[Reg.Char.DETECTIVE]) {
+                    guideText.text = "You're disabled !";
+                } else {
+                    guideText.text = "Pick 3 character to guess";
                 }
-                if (protectionPortion.isSelected()) toxicPortion.clearSelect();
+            case Reg.Turn.NUMB_WITCH:
+                if (!Reg.characterMapping[Reg.Char.NUMB_WITCH].isDead) {
+                    guideText.text = "Pick a target to numb";
+                    hideSpecificCards(Reg.Char.DISABLER);
+                } else {
+                    guideText.text = "Nothing to do !";
+                }
+            case Reg.Turn.SORCERER:
+                if (Reg.portionLeft != 0 && !Reg.characterMapping[Reg.Char.SORCERER].isDead) {
+                    guideText.text = "Optional: pick a portion, then pick a target\nPortion left: " + Reg.portionLeft;
+                    if (toxicPortion.isSelected()) protectionPortion.clearSelect();
+                    if (protectionPortion.isSelected()) toxicPortion.clearSelect();
+                } else {
+                    toxicPortion.visible = false;
+                    protectionPortion.visible = false;
+                    guideText.text = "Nothing to do !";
+                }
             case Reg.Turn.WOLF:
                 guideText.text = "Pick a target to attack";
                 hideSpecificCards(Reg.Char.WOLF);
             case Reg.Turn.DISABLER:
-                guideText.text = "Pick a character to disable";
-                hideSpecificCards(Reg.Char.DISABLER);
+                if (!Reg.characterMapping[Reg.Char.DISABLER].isDead) {
+                    guideText.text = "Pick a character to disable";
+                    hideSpecificCards(Reg.Char.DISABLER);
+                } else {
+                    guideText.text = "Nothing to do !";
+                }
             case Reg.Turn.CURSED:
                 guideText.text = "Nothing to do !";
             case Reg.Turn.HUNTER:
                 guideText.text = "Nothing to do !";
             case Reg.Turn.APPRENTICE:
-                guideText.text = "Pick a character to be your master";
-                hideSpecificCards(Reg.Char.APPRENTICE);
-            case Reg.Turn.CUPID:
-                guideText.text = "Please select a couple";
-                if (doneSelectCouple) {
-                    guideText.text = "Selected couple: " + Reg.couple[0].getName() + " & " + Reg.couple[1].getName();
+                if (Reg.characterMapping[Reg.Char.APPRENTICE] != null && !Reg.characterMapping[Reg.Char.APPRENTICE].isDead && !doneSelectMaster) {
+                    guideText.text = "Pick a character to be your master";
+                    hideSpecificCards(Reg.Char.APPRENTICE);
+                } else {
+                    guideText.text = "Nothing to do !";
                 }
+            case Reg.Turn.CUPID:
+                if (!Reg.characterMapping[Reg.Char.CUPID].isDead) {
+                    guideText.text = "Please select a couple";
+                    if (doneSelectCouple) {
+                        guideText.text = "Selected couple: " + Reg.couple[0].getName() + " & " + Reg.couple[1].getName();
+                    }
+                } else {
+                    guideText.text = "Nothing to do !";
+                }
+            case Reg.Turn.MIDDAY:
+                guideText.text = "Nothing to do !";
+                hideAllCards();
             case Reg.Turn.DAWN:
+                guideText.text = "Nothing to do !";
+                hideAllCards();
+            case Reg.Turn.FUNERAL:
+                guideText.text = "Pick a target to follow hunter's dead";
+            case Reg.Turn.HANGING:
+                guideText.text = "Vote for a target to be hanged";
+            case Reg.Turn.TWILIGHT:
+                guideText.text = "Nothing to do !";
                 hideAllCards();
             default:
         }
@@ -219,21 +312,38 @@ class PlayState extends FlxState
         super.update(elapsed);
     }
 
+    function checkGameOver(){
+        var alive = 0;
+        for (wolf in Reg.wolfs) {
+            if (!wolf.isDead) alive += 1;
+        }
+        if (alive >= countAlive()) {
+            Reg.gameResult = Reg.Game.WOLFS_WON;
+            FlxG.switchState(new GameOverState());
+        } else if (alive == 0) {
+            Reg.gameResult = Reg.Game.VILLAGERS_WON;
+            FlxG.switchState(new GameOverState());
+        }
+    }
+
     function setTestState()
     {
-        /* wolf, wolf, wolf, dis, so, witch, cupid, hunter, cus
-
-        */
-        doneSelectCouple = true;
         Reg.couple = [];
-        Reg.couple.push(Reg.characterMapping[Reg.Char.DETECTIVE]);
+        Reg.couple.push(Reg.characterMapping[Reg.Char.CURSED]);
         Reg.couple.push(Reg.characterMapping[Reg.Char.HUNTER]);
         // Set disable
         Reg.disablerTarget = Reg.wolfs[0];
-        Reg.wolfTarget = Reg.characterMapping[Reg.Char.DETECTIVE];
+        // set wolf target
+        Reg.wolfTarget = Reg.characterMapping[Reg.Char.CURSED];
         // Set protection
-        Reg.portionTarget = Reg.characterMapping[Reg.Char.DETECTIVE];
-        Reg.portionUsed = Reg.Portion.TOXIC;
+        Reg.portionLeft = 1;
+        Reg.portionTarget = Reg.characterMapping[Reg.Char.SORCERER];
+        Reg.portionUsed = Reg.Portion.PROTECTION;
+        // Set numb witch
+        Reg.numbWitchTarget = Reg.characterMapping[Reg.Char.CUPID];
+        // Set Apprentice
+        doneSelectMaster = true;
+        Reg.apprenticeTarget = Reg.characterMapping[Reg.Char.CUPID];
     }
 
     function isProtected(character:CharacterCard){
@@ -244,7 +354,92 @@ class PlayState extends FlxState
         return !Reg.characterMapping[Reg.Char.SORCERER].isDisabled && Reg.portionTarget == character && Reg.portionUsed == Reg.Portion.TOXIC;
     }
 
-    function updateGameState()
+    function updateFuneralState()
+    {
+        var deadMans:Array<CharacterCard> = new Array();
+        // check disable target
+        summaryText.text += "\n--- Funeral Result ---\n\n";
+        summaryText.text += "Hunter choose to kill " + Reg.hunterTarget.getFullName() + " !\n";
+        pushIfNotExist(deadMans, Reg.hunterTarget);
+
+        var lovedOne = getLover(Reg.hunterTarget);
+        if (lovedOne != null){
+            summaryText.text += lovedOne.getFullName() + " is in love with " + Reg.hunterTarget.getFullName() + ".\n";
+            summaryText.text += lovedOne.getFullName() + " died of broken heart\n";
+            pushIfNotExist(deadMans, lovedOne);
+        }
+
+        for (character in deadMans) {
+            if (character == Reg.apprenticeTarget && !apprenticeUpgraded) {
+                    summaryText.text += character.getFullName() + " is dead\n";
+                    summaryText.text += Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + " became " + Reg.Names[character.type] + "\n";
+                    apprenticeUpgraded = true;
+                    upgradeApprentice(Reg.characterMapping[Reg.Char.APPRENTICE], Reg.apprenticeTarget);
+            }
+            summaryText.text += character.getFullName() + " is dead\n";
+            character.setDead();
+        }
+        trace(deadMans);
+        trace(summaryText.text);
+    }
+
+    function cleanUpState()
+    {
+        Reg.disablerTarget = null;
+        Reg.apprenticeTarget = null;
+        Reg.wolfTarget = null;
+        Reg.portionUsed = null;
+        Reg.portionTarget = null;
+        Reg.numbWitchTarget = null;
+        Reg.hunterTarget = null;
+        Reg.hangingTarget = null;
+        for (character in allCharacters) {
+            if (!character.isDead) {
+                character.isDisabled = false;
+            }
+        }
+        summaryText.text = "";
+        summaryText.visible = false;
+    }
+
+    function updateHangingState()
+    {
+        var deadMans:Array<CharacterCard> = new Array();
+        // check disable target
+        summaryText.text += "\n--- Vote Result ---\n\n";
+        summaryText.text += "Everyone voted to hang " + Reg.hangingTarget.getFullName() + "\n";
+        pushIfNotExist(deadMans, Reg.hangingTarget);
+
+        var lovedOne = getLover(Reg.hangingTarget);
+        if (lovedOne != null){
+            summaryText.text += lovedOne.getFullName() + " is in love with " + Reg.hangingTarget.getFullName() + ".\n";
+            summaryText.text += lovedOne.getFullName() + " died of broken heart\n";
+            pushIfNotExist(deadMans, lovedOne);
+        }
+
+        for (character in deadMans) {
+            if (character.type == Reg.Char.CURSED && !cursedUpgraded && Reg.wolfTarget == character) {
+                cursedUpgraded = true;
+                summaryText.text += character.getFullName() + " became wolf.\n";
+                // TODO upgrade Wolf
+                upgradeCursed(character);
+            } else {
+                summaryText.text += character.getFullName() + " is dead\n";
+                if (character == Reg.apprenticeTarget && !apprenticeUpgraded) {
+                    summaryText.text += character.getFullName() + " is dead\n";
+                    summaryText.text += Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + " became " + Reg.Names[character.type] + "\n";
+                    apprenticeUpgraded = true;
+                    upgradeApprentice(Reg.characterMapping[Reg.Char.APPRENTICE], Reg.apprenticeTarget);
+                }
+                character.setDead();
+            }
+        }
+
+        trace(deadMans);
+        trace(summaryText.text);
+    }
+
+    function updateDawnState()
     {
         var deadMans:Array<CharacterCard> = new Array();
         // check disable target
@@ -252,6 +447,14 @@ class PlayState extends FlxState
         if (Reg.disablerTarget != null) {
             Reg.disablerTarget.isDisabled = true;
             summaryText.text += Reg.characterMapping[Reg.Char.DISABLER].getFullName() + " slept with " + Reg.disablerTarget.getFullName() + "\n";
+        }
+
+        // first time disable cupid
+        if (Reg.disablerTarget == Reg.characterMapping[Reg.Char.CUPID] && !doneSelectCouple) {
+            doneSelectCouple = false;
+            while (Reg.couple.length != 0) Reg.couple.pop();
+        } else {
+            doneSelectCouple = true;
         }
 
         if (Reg.wolfs.length == 1 && Reg.disablerTarget.type == Reg.Char.WOLF) {
@@ -280,37 +483,39 @@ class PlayState extends FlxState
             var lovedOne = getLover(character);
             if (lovedOne != null){
                 summaryText.text += lovedOne.getFullName() + " is in love with " + character.getFullName() + ".\n";
-                if (isProtected(lovedOne)) {
-                    summaryText.text += lovedOne.getFullName() + " is protected\n";
-                } else {
-                    if (isPoisoned(lovedOne)) {
-                        summaryText.text += lovedOne.getFullName() + " is poisoned and died\n";
-                    }
-                    summaryText.text += lovedOne.getFullName() + " died of broken heart\n";
-                    pushIfNotExist(deadMans, lovedOne);
+                if (isPoisoned(lovedOne)) {
+                    summaryText.text += lovedOne.getFullName() + " is poisoned and died\n";
                 }
+                summaryText.text += lovedOne.getFullName() + " died of broken heart\n";
+                pushIfNotExist(deadMans, lovedOne);
                 break;
             }
         }
 
         for (character in deadMans) {
-            if (character.type == Reg.Char.CURSED) {
+            if (character.type == Reg.Char.CURSED && !cursedUpgraded && Reg.wolfTarget == character) {
                 cursedUpgraded = true;
                 summaryText.text += character.getFullName() + " became wolf.\n";
+                upgradeCursed(character);
             } else {
-                if (character.type == Reg.Char.HUNTER) {
+                summaryText.text += character.getFullName() + " is dead\n";
+                if (character.type == Reg.Char.HUNTER && !hunterIsDead) {
                     hunterIsDead = true;
                 }
+                if (character.type == Reg.Char.WOLF) {
+                    Reg.wolfs.remove(character);
+                }
                 if (character == Reg.apprenticeTarget && !apprenticeUpgraded) {
-                    summaryText.text += character.getFullName() + " is dead\n";
-                    summaryText.text += Reg.characterMapping[Reg.Char.APPRENTICE] + " became " + Reg.Names[character.type] + "\n";
+                    summaryText.text += Reg.characterMapping[Reg.Char.APPRENTICE].getFullName() + " became " + Reg.Names[character.type] + "\n";
                     apprenticeUpgraded = true;
+                    upgradeApprentice(Reg.characterMapping[Reg.Char.APPRENTICE], Reg.apprenticeTarget);
                 }
-                if (character == Reg.dumbWitchTarget && !Reg.characterMapping[Reg.Char.DUMB_WITCH].isDisabled) {
-                    summaryText.text += character.getFullName() + " is silenced\n";
-                }
-                summaryText.text += character.getFullName() + " is dead\n";
+                character.setDead();
             }
+        }
+
+        if (Reg.numbWitchTarget != null && !Reg.characterMapping[Reg.Char.NUMB_WITCH].isDisabled) {
+            summaryText.text += Reg.numbWitchTarget.getFullName() + " is silenced\n";
         }
 
         trace(deadMans);
@@ -324,8 +529,34 @@ class PlayState extends FlxState
         }
     }
 
+    function upgradeCursed(cursed:CharacterCard)
+    {
+        cursed.type = Reg.Char.WOLF;
+        cursed.setCharacterName(Reg.Names[cursed.type]);
+        Reg.wolfs.push(cursed);
+        Reg.characterMapping.remove(Reg.Char.CURSED);
+    }
+
+    function upgradeApprentice(apprentice:CharacterCard, master:CharacterCard)
+    {
+        // Upgrade apprentice
+        Reg.characterMapping[master.type] = apprentice;
+        apprentice.type = master.type;
+        apprentice.setCharacterName(Reg.Names[master.type]);
+        // Repick couple if master is Cupid
+        if (master.type == Reg.Char.CUPID) {
+            doneSelectCouple = false;
+            while (Reg.couple.length != 0) Reg.couple.pop();
+        }
+        // Change to dead man
+        Reg.characterMapping[Reg.Char.DEADMAN] = master;
+        master.type = Reg.Char.DEADMAN;
+        master.setCharacterName(Reg.Names[master.type]);
+        Reg.characterMapping.remove(Reg.Char.APPRENTICE);
+    }
+
     function getLover(character:CharacterCard){
-        if (!Reg.characterMapping[Reg.Char.CUPID].isDisabled) {
+        if (doneSelectCouple) {
             if (Reg.couple.indexOf(character) != -1) {
                 return Reg.couple.filter(function(v){ return v != character; })[0];
             } else {
@@ -370,6 +601,18 @@ class PlayState extends FlxState
         for (character in allCharacters) {
             character.show();
         }
+    }
+
+    function countAlive():Int
+    {
+        var alive = 0;
+        for (character in allCharacters) {
+            if (character.type != Reg.Char.WOLF && !character.isDead) {
+                alive += 1;
+            }
+        }
+
+        return alive;
     }
 
     function clearSelectAllCards():Void

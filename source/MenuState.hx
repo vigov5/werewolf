@@ -19,7 +19,7 @@ class MenuState extends FlxState
         Reg.Char.HUNTER,
         Reg.Char.DETECTIVE,
         Reg.Char.SORCERER,
-        Reg.Char.DUMB_WITCH,
+        Reg.Char.NUMB_WITCH,
         Reg.Char.APPRENTICE,
         Reg.Char.CUPID,
         Reg.Char.CURSED,

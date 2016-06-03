@@ -1,9 +1,7 @@
 package ;
 import flixel.FlxG;
-import flash.display3D.textures.RectangleTexture;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
-import flixel.util.FlxColor;
 import flixel.group.FlxSpriteGroup;
 import flixel.input.mouse.FlxMouseEventManager;
 
@@ -23,7 +21,7 @@ class CharacterCard extends FlxSpriteGroup
         this.type = type;
         cardFrame = new FlxSprite();
         cardFrame.loadGraphic("assets/images/frame.png", true, 77, 107);
-        cardFrame.animation.add("toggle", [0, 1], 0, false);
+        cardFrame.animation.add("toggle", [0, 1, 2], 0, false);
         cardFrame.animation.frameIndex = 1;
         add(cardFrame);
         cardImage = new FlxSprite();
@@ -41,9 +39,14 @@ class CharacterCard extends FlxSpriteGroup
         FlxMouseEventManager.add(cardFrame, onMouseDown, onMouseUp, onMouseOver, onMouseOut);
     }
 
-    public function setName(name:String)
+    public function setPlayerName(name:String)
     {
         playerName.text = name;
+    }
+
+    public function setCharacterName(name:String)
+    {
+        cardName.text = name;
     }
 
     public function getFullName():String
@@ -77,23 +80,36 @@ class CharacterCard extends FlxSpriteGroup
     {
         cardFrame.animation.frameIndex = 1;
     }
+
+    public function setDead()
+    {
+        isDead = true;
+        isDisabled = true;
+        cardFrame.animation.frameIndex = 2;
+    }
     
     function onMouseDown(sprite:FlxSprite) {}
     function onMouseUp(sprite:FlxSprite) {
-        cardFrame.animation.frameIndex = (cardFrame.animation.frameIndex + 1) % 2;
+        if (!isDead) {
+            cardFrame.animation.frameIndex = (cardFrame.animation.frameIndex + 1) % 2;
+        }
     }
     function onMouseOver(sprite:FlxSprite) {}
     function onMouseOut(sprite:FlxSprite) {}
 
     override public function update(elapsed:Float):Void
     {
-        #if mobile
-        for (touch in FlxG.touches.list) {
-            if (touch.justPressed && touch.overlaps(cardFrame)) {
-                cardFrame.animation.frameIndex = (cardFrame.animation.frameIndex + 1) % 2;
+        if (!isDead) {
+            #if mobile
+            for (touch in FlxG.touches.list) {
+                if (touch.justPressed && touch.overlaps(cardFrame)) {
+                    cardFrame.animation.frameIndex = (cardFrame.animation.frameIndex + 1) % 2;
+                }
             }
+            #end
+        } else {
+            cardFrame.animation.frameIndex = 2;
         }
-        #end
         super.update(elapsed);
     }
 }

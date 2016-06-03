@@ -2,11 +2,6 @@ package;
 
 import flixel.text.FlxText;
 import flixel.ui.FlxButton;
-import haxe.zip.Reader;
-import openfl.text.TextFieldAutoSize;
-import openfl.text.TextFieldType;
-import flixel.util.FlxColor;
-import openfl.text.TextField;
 import flixel.FlxG;
 import flixel.FlxState;
 import PlayerLabel;

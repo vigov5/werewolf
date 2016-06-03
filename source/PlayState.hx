@@ -88,23 +88,23 @@ class PlayState extends FlxState
         errorText.text = "";
         switch (currentTurn)
         {
-            case Reg.Turn.NUMB_WITCH:
-                if (Reg.characterMapping[Reg.Char.NUMB_WITCH].isDead) {
+            case Reg.Turn.SPELLCASTER:
+                if (Reg.characterMapping[Reg.Char.SPELLCASTER].isDead) {
                     currentTurn = Reg.Turn.DETECTIVE;
                 } else {
                     if (getSelectedCardNums() != 1) {
                         errorText.text = "Invalid number of character !";
-                        Reg.numbWitchTarget = null;
+                        Reg.spellcasterTarget = null;
                     } else {
-                        Reg.numbWitchTarget = getSelectedCard();
-                        summaryText.text += Reg.characterMapping[Reg.Char.NUMB_WITCH].getFullName() + " want " + Reg.numbWitchTarget.getFullName() + " to be silenced\n";
-                        trace(Reg.numbWitchTarget);
+                        Reg.spellcasterTarget = getSelectedCard();
+                        summaryText.text += Reg.characterMapping[Reg.Char.SPELLCASTER].getFullName() + " want " + Reg.spellcasterTarget.getFullName() + " to be silenced\n";
+                        trace(Reg.spellcasterTarget);
                         currentTurn = Reg.Turn.DETECTIVE;
                     }
                 }
             case Reg.Turn.SORCERER:
                 if (Reg.portionLeft == 0 || Reg.characterMapping[Reg.Char.SORCERER].isDead) {
-                    currentTurn = Reg.Turn.NUMB_WITCH;
+                    currentTurn = Reg.Turn.SPELLCASTER;
                     toxicPortion.visible = false;
                     protectionPortion.visible = false;
                 } else {
@@ -118,7 +118,7 @@ class PlayState extends FlxState
                             Reg.portionLeft -= 1;
                             toxicPortion.visible = false;
                             protectionPortion.visible = false;
-                            currentTurn = Reg.Turn.NUMB_WITCH;
+                            currentTurn = Reg.Turn.SPELLCASTER;
                         }
                     }
                 }
@@ -246,8 +246,8 @@ class PlayState extends FlxState
                 } else {
                     guideText.text = "Pick 3 character to guess";
                 }
-            case Reg.Turn.NUMB_WITCH:
-                if (!Reg.characterMapping[Reg.Char.NUMB_WITCH].isDead) {
+            case Reg.Turn.SPELLCASTER:
+                if (!Reg.characterMapping[Reg.Char.SPELLCASTER].isDead) {
                     guideText.text = "Pick a target to numb";
                     hideSpecificCards(Reg.Char.DISABLER);
                 } else {
@@ -339,8 +339,8 @@ class PlayState extends FlxState
         Reg.portionLeft = 1;
         Reg.portionTarget = Reg.characterMapping[Reg.Char.SORCERER];
         Reg.portionUsed = Reg.Portion.PROTECTION;
-        // Set numb witch
-        Reg.numbWitchTarget = Reg.characterMapping[Reg.Char.CUPID];
+        // Set spellcaster
+        Reg.spellcasterTarget = Reg.characterMapping[Reg.Char.CUPID];
         // Set Apprentice
         doneSelectMaster = true;
         Reg.apprenticeTarget = Reg.characterMapping[Reg.Char.CUPID];
@@ -390,7 +390,7 @@ class PlayState extends FlxState
         Reg.wolfTarget = null;
         Reg.portionUsed = null;
         Reg.portionTarget = null;
-        Reg.numbWitchTarget = null;
+        Reg.spellcasterTarget = null;
         Reg.hunterTarget = null;
         Reg.hangingTarget = null;
         for (character in allCharacters) {
@@ -514,8 +514,8 @@ class PlayState extends FlxState
             }
         }
 
-        if (Reg.numbWitchTarget != null && !Reg.characterMapping[Reg.Char.NUMB_WITCH].isDisabled) {
-            summaryText.text += Reg.numbWitchTarget.getFullName() + " is silenced\n";
+        if (Reg.spellcasterTarget != null && !Reg.characterMapping[Reg.Char.SPELLCASTER].isDisabled) {
+            summaryText.text += Reg.spellcasterTarget.getFullName() + " is silenced\n";
         }
 
         trace(deadMans);

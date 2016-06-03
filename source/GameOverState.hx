@@ -40,7 +40,7 @@ class GameOverState extends FlxState
         Reg.portionLeft = 2;
         Reg.portionUsed = null;
         Reg.portionTarget = null;
-        Reg.numbWitchTarget = null;
+        Reg.spellcasterTarget = null;
         Reg.hunterTarget = null;
         Reg.hangingTarget = null;
         Reg.characterMapping = new Map();

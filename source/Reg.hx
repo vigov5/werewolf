@@ -7,7 +7,7 @@ enum Char {
     HUNTER;
     CURSED;
     DISABLER;
-    NUMB_WITCH;
+    SPELLCASTER;
     SORCERER;
     APPRENTICE;
     DETECTIVE;
@@ -31,7 +31,7 @@ enum Turn {
     HUNTER;
     CURSED;
     DISABLER;
-    NUMB_WITCH;
+    SPELLCASTER;
     SORCERER;
     APPRENTICE;
     DETECTIVE;
@@ -53,7 +53,7 @@ class Reg
         Char.HUNTER => "Hunter",
         Char.CURSED => "Cursed",
         Char.DISABLER => "Disabler",
-        Char.NUMB_WITCH => "Numb Witch",
+        Char.SPELLCASTER => "Spellcaster",
         Char.SORCERER => "Sorcerer",
         Char.APPRENTICE => "Apprentice",
         Char.DETECTIVE => "Detective",
@@ -67,7 +67,7 @@ class Reg
         Char.HUNTER => "hunter.png",
         Char.CURSED => "cursed.png",
         Char.DISABLER => "disabler.png",
-        Char.NUMB_WITCH => "witch.png",
+        Char.SPELLCASTER => "witch.png",
         Char.SORCERER => "sorcerer.png",
         Char.APPRENTICE => "apprentice.png",
         Char.DETECTIVE => "detective.png"
@@ -79,7 +79,7 @@ class Reg
         Turn.HUNTER => "Hunter",
         Turn.CURSED => "Cursed",
         Turn.DISABLER => "Disabler",
-        Turn.NUMB_WITCH => "Numb Witch",
+        Turn.SPELLCASTER => "Numb Witch",
         Turn.SORCERER => "Sorcerer",
         Turn.APPRENTICE => "Apprentice",
         Turn.DETECTIVE => "Detective",
@@ -97,7 +97,7 @@ class Reg
     public static var portionLeft = 2;
     public static var portionUsed:Reg.Portion;
     public static var portionTarget:CharacterCard = null;
-    public static var numbWitchTarget:CharacterCard = null;
+    public static var spellcasterTarget:CharacterCard = null;
     public static var hunterTarget:CharacterCard = null;
     public static var hangingTarget:CharacterCard = null;
     public static var characterMapping:Map<Reg.Char, CharacterCard>;
